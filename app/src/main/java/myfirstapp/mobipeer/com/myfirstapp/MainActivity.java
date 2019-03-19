@@ -13,6 +13,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -25,8 +26,11 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -43,6 +47,7 @@ import myfirstapp.mobipeer.com.myfirstapp.rtsp.RtspClient;
 import myfirstapp.mobipeer.com.myfirstapp.rtsp.RtspServer;
 import myfirstapp.mobipeer.com.myfirstapp.video.VideoQuality;
 
+import static java.lang.Thread.sleep;
 import static myfirstapp.mobipeer.com.myfirstapp.MainActivity.ParentIP;
 import static myfirstapp.mobipeer.com.myfirstapp.MainActivity.TAG;
 import static myfirstapp.mobipeer.com.myfirstapp.MainActivity.myconf;
@@ -162,41 +167,41 @@ public class MainActivity extends Activity implements RtspClient.Callback, Sessi
 
             handler.post(runnable);
         }
-//        final File file = new File(Environment.getExternalStorageDirectory() + File.separator + "logvalues.txt");
-//        try {
-//            file.createNewFile();
-//        }catch(Exception e){}
-//        OutputStream fo;
-//        PrintWriter pw = null;
-//        try {
-//            fo = new FileOutputStream(file);
-//            pw = new PrintWriter(fo, true);
-//        }catch(Exception e){}
-//        final PrintWriter pwf = pw;
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                try {
-//                    while(true){
-//                        sleep(60000);
-//                        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-//                        Intent batteryStatus = MainActivity.mainobj.registerReceiver(null, ifilter);
-//                        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-//                        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-//                        pwf.println("B : "+level+" "+scale);
-//                        Client.updateStatsLabel(pwf);
-//                    }
-//                }
-//                catch (Exception e){
-//
-//                }
-//            }
-//        }).start();
+        final File file = new File(Environment.getExternalStorageDirectory() + File.separator + "logvalues.txt");
+        try {
+            file.createNewFile();
+        }catch(Exception e){}
+        OutputStream fo;
+        PrintWriter pw = null;
+        try {
+            fo = new FileOutputStream(file);
+            pw = new PrintWriter(fo, true);
+        }catch(Exception e){}
+        final PrintWriter pwf = pw;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    while(true){
+                        sleep(15000);
+                        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+                        Intent batteryStatus = MainActivity.mainobj.registerReceiver(null, ifilter);
+                        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+                        pwf.println("B : "+level+" "+scale);
+                        Client.updateStatsLabel(pwf);
+                    }
+                }
+                catch (Exception e){
+
+                }
+            }
+        }).start();
     }
 
     public void init_rtsp_client(final String IP) {
         Log.e(TAG, "client starting with source IP :" + IP);
-        if(!MainActivity.iamleader) {
+        if(MainActivity.iamleader) {
             this.startService(new Intent(this, RtspServer.class));
             new Thread(new Runnable() {
                 @Override
@@ -207,14 +212,14 @@ public class MainActivity extends Activity implements RtspClient.Callback, Sessi
                     } catch (Exception e) {
                         Log.e(TAG, "error");
                     }
-                    duplicatestream = true;
-                    rtspclient = new Client();
-                    rtspclient.sendDescribe();
-                    rtspclient.sendSetup();
-                    rtspclient.sendPlay();
+//                    duplicatestream = true;
+//                    rtspclient = new Client();
+//                    rtspclient.sendDescribe();
+//                    rtspclient.sendSetup();
+//                    rtspclient.sendPlay();
                     try {
                         mMediaPlayer = new MediaPlayer();
-                        mMediaPlayer.setDataSource("rtsp://" + MyIP + ":12345/video");
+                        mMediaPlayer.setDataSource("rtsp://" + IP + ":12345/video");
                         mMediaPlayer.setSurface(((android.view.SurfaceView) mainobj.findViewById(R.id.justSurface)).getHolder().getSurface());
                         mMediaPlayer.setOnPreparedListener(mainobj);
                         mMediaPlayer.prepareAsync();
@@ -296,11 +301,11 @@ public class MainActivity extends Activity implements RtspClient.Callback, Sessi
                     clien.setVisibility(View.INVISIBLE);
                     et.setVisibility(View.INVISIBLE);
                     et.setEnabled(false);
-                    SourceIP = "192.168.0.3";
-                    joinStreamRequest("192.168.0.3");
+                    SourceIP = "192.168.1.126";
+//                    joinStreamRequest("192.168.0.3");
                     try {
                         joingate.acquire();
-                        init_rtsp_client(ParentIP);
+                        init_rtsp_client("192.168.1.126");
                         joingate.release();
                     } catch (Exception e) {
                     }
@@ -772,7 +777,7 @@ public class MainActivity extends Activity implements RtspClient.Callback, Sessi
             socket.setSoTimeout(500);
             while (true) {
                 dos.println(0);
-                Thread.sleep(500);
+                sleep(500);
                 try {
                     String s = dis.readLine();
                     Log.e(TAG, "received heart beat" + s);
@@ -801,7 +806,7 @@ public class MainActivity extends Activity implements RtspClient.Callback, Sessi
             socket.setSoTimeout(500);
             while (true) {
                 dos.println(0);
-                Thread.sleep(500);
+                sleep(500);
                 try {
                     String s = dis.readLine();
                     Log.e(TAG, "received heart beat" + s);
@@ -1481,7 +1486,7 @@ class listeningLeaderThread extends Thread{
                 while(true)
                 {
                     dos.println(0);
-                    Thread.sleep(500);
+                    sleep(500);
                     try {
                         String s = dis.readLine();
                         Log.e(TAG,"Leader received heart beat" + s);

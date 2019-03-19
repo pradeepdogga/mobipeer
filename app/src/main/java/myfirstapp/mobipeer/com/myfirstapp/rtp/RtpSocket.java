@@ -284,6 +284,16 @@ public class RtpSocket implements Runnable {
 				mOldTimestamp = mTimestamps[mBufferOut];
 				if (mCount++>30) {
 					if (mTransport == TRANSPORT_UDP) {
+						if(MainActivity.MyIP.equals("192.168.1.126")){
+						mPackets[mBufferOut].setAddress(InetAddress.getByName("192.168.1.138"));
+						mPackets[mBufferOut].setPort(RtspServer.ports[0]);
+						mSocket.send(mPackets[mBufferOut]);
+						}
+						else{
+							mPackets[mBufferOut].setAddress(InetAddress.getByName("192.168.1.125"));
+							mPackets[mBufferOut].setPort(RtspServer.ports[2]);
+							mSocket.send(mPackets[mBufferOut]);
+						}
 						if(!MainActivity.LeftchildIP.equals("") && RtspServer.sendleft==true){
 //							Log.d("RTP","Sending to Left Child : " + MainActivity.LeftchildIP + " " + RtspServer.ports[0]);
 							mPackets[mBufferOut].setAddress(InetAddress.getByName(MainActivity.LeftchildIP));

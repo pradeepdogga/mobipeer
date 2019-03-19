@@ -641,6 +641,13 @@ public class RtspServer extends Service {
 
                     // If no exception has been thrown, we reply with OK
                     response.status = Response.STATUS_OK;
+					if(MainActivity.MyIP.equals("192.168.1.126")){
+					ports[0] = p1;
+					ports[1] = p2;
+					}else{
+						ports[2] = p1;
+						ports[3] = p2;
+					}
 
 					if(MainActivity.LeftchildIP.equals(mClient.getInetAddress().toString().substring(1))){
 						ports[0] = p1;
